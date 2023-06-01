@@ -7,12 +7,20 @@ class Node:
         self.alter = alter
         self.parentNode = parentNode
         self.successors = successors
+        self.lower_priority = 0
 
-    def __eq__(self, other) -> bool:
-        return self.cost == other.cost
+    def __eq__(self, other):
+        if other is None:
+            return False
+        return (self.cost, self.lower_priority) == (other.cost, other.lower_priority)
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other):
+        if self.cost == other.cost:
+            return self.lower_priority < other.lower_priority
         return self.cost < other.cost
+
+    def decrease_priority(self):
+        self.lower_priority += 1
 
     def __str__(self) -> str:
         matrix_str = "\n["
@@ -33,16 +41,18 @@ class Node:
     def set_successor(self, successors):
         self.successors = successors
 
-def print_succ(parentnode:Node, succ):
+
+def print_succ(parentnode: Node, succ):
     print('***********')
-    print(parentnode.cost)
+    print(parentnode.cost, " , ", parentnode.alter)
     print_puzzle(parentnode.state)
     print('---------------')
 
     for state in succ:
-        print(state.cost)
+        print(state.cost, " , ", state.alter)
         print_puzzle(state.state)
         print('------')
+
 
 class Solution:
     def __init__(self, initial_state) -> None:
@@ -56,6 +66,8 @@ class Solution:
         # print(self.state.state)
         if is_goal(self.state, goal_state):
             return self.state.state
+
+        # ! when try to explore the node for the first time
         if self.state.successors == None:
             new_successors = successors(self.state)
             new_successors.sort(key=lambda node: node.cost)
@@ -64,23 +76,43 @@ class Solution:
         # * if the new best cost is less than parent node alter
         # * we should explore deeper
 
-        if self.state.alter > self.state.successors[0].cost:
-            print('1')
+        # !
+        else:
+            self.state.successors = sorted(self.state.successors)
 
+        if check_for_loop(self.state.successors[0], self.state.parentNode):
+            print('zarppp')
+            self.state.successors[0].cost = float('inf')
+            self.state = self.state.parentNode
+            self.solve_puzzle(goal_state)
+            return
+
+        if self.state.alter >= self.state.successors[0].cost:
+            print('1')
             if self.state.successors[1].cost < self.state.alter:
                 self.state.successors[0].set_alternative(
                     self.state.successors[1].cost)
             else:
                 self.state.successors[0].set_alternative(self.state.alter)
-            # print_puzzle(self.state.successors[0].state)
-            print_succ(self.state,self.state.successors)
+
+            print_succ(self.state, self.state.successors)
             self.state = self.state.successors[0]
             self.solve_puzzle(goal_state)
+            
         else:
             print('2')
             self.state.cost = self.state.successors[0].cost
+            self.state.decrease_priority()
             self.state = self.state.parentNode
             self.solve_puzzle(goal_state)
+        return
+
+
+def check_for_loop(best_succssor: Node, parentnode: Node):
+    if parentnode == None:
+        return False
+    else:
+        return is_goal(best_succssor, parentnode.state)
 
 
 goal_state_positions = {

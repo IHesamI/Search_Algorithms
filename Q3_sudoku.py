@@ -44,24 +44,23 @@ def find_empty_cell(board):
 
 
 def is_valid_move(board, row, col, num):
-    # Check row
+
     for i in range(9):
         if board[row][i] == num:
             return False
 
-    # Check column
+
     for i in range(9):
         if board[i][col] == num:
             return False
 
-    # Check 3x3 box
+
     start_row = (row // 3) * 3
     start_col = (col // 3) * 3
     for i in range(3):
         for j in range(3):
             if board[start_row + i][start_col + j] == num:
                 return False
-
     return True
 
 

@@ -1,5 +1,5 @@
-
-
+# Node Class 
+# this class helps to traverse through tree
 class Node:
     def __init__(self, cost: int, state: list, alter=None, parentNode=None, successors=None) -> None:
         self.cost = cost
@@ -53,59 +53,58 @@ def print_succ(parentnode: Node, succ):
         print_puzzle(state.state)
         print('------')
 
+def find_alter_for(state:Node,successors:list):
+    list_of_values=[state.alter]
+    list_of_values.extend([succ.cost for succ in successors])
+    return min(list_of_values,key=lambda x : float('inf') if x is None else x)
 
 class Solution:
     def __init__(self, initial_state) -> None:
         self.state = Node(heuristic(initial_state),
                           initial_state, float('inf'))
 
-        # ! NOT SURE IT SHOULD BE COMMENTED
-        # self.successors.append(self.state)
-
-    def solve_puzzle(self, goal_state):
-        # print(self.state.state)
+    def rbfs(self, goal_state):
         if is_goal(self.state, goal_state):
-            return self.state.state
+                # print_puzzle(self.state.state)
+                return 
+        try:
+            # ! when try to explore the node for the first time
+            if self.state.successors == None:
+                new_successors = successors(self.state)
+                new_successors.sort(key=lambda node: node.cost)
+                self.state.set_successor(new_successors)
 
-        # ! when try to explore the node for the first time
-        if self.state.successors == None:
-            new_successors = successors(self.state)
-            new_successors.sort(key=lambda node: node.cost)
-            self.state.set_successor(new_successors)
+            # * if the new best cost is less than parent node alter
+            # * we should explore deeper
 
-        # * if the new best cost is less than parent node alter
-        # * we should explore deeper
-
-        # !
-        else:
-            self.state.successors = sorted(self.state.successors)
-
-        if check_for_loop(self.state.successors[0], self.state.parentNode):
-            print('zarppp')
-            self.state.successors[0].cost = float('inf')
-            self.state = self.state.parentNode
-            self.solve_puzzle(goal_state)
-            return
-
-        if self.state.alter >= self.state.successors[0].cost:
-            print('1')
-            if self.state.successors[1].cost < self.state.alter:
-                self.state.successors[0].set_alternative(
-                    self.state.successors[1].cost)
+            # !
             else:
-                self.state.successors[0].set_alternative(self.state.alter)
+                self.state.successors = sorted(self.state.successors)
 
-            print_succ(self.state, self.state.successors)
-            self.state = self.state.successors[0]
-            self.solve_puzzle(goal_state)
-            
-        else:
-            print('2')
-            self.state.cost = self.state.successors[0].cost
-            self.state.decrease_priority()
-            self.state = self.state.parentNode
-            self.solve_puzzle(goal_state)
-        return
+            # print_succ(self.state,self.state.successors)
+            if check_for_loop(self.state.successors[0], self.state.parentNode):
+                # print('zarppp')
+                self.state.successors[0].cost = float('inf')
+                # TODO
+                # Need to set alter of the next_best_node
+                self.state.successors[1].alter = find_alter_for(self.state,self.state.successors)
+                self.state.successors = sorted(self.state.successors)
+
+            if self.state.alter > self.state.successors[0].cost:
+                self.state.successors[0].set_alternative(min(self.state.successors[1].cost,self.state.alter))
+                self.state = self.state.successors[0]
+                self.rbfs(goal_state)
+
+            else:
+                # print('2')
+                self.state.cost = self.state.successors[0].cost
+                self.state.decrease_priority()
+                self.state = self.state.parentNode
+                self.rbfs(goal_state)
+            return
+        except Exception as e:
+            self.state=None
+            return
 
 
 def check_for_loop(best_succssor: Node, parentnode: Node):
@@ -173,46 +172,61 @@ def successors(state: Node):
 
 
 def is_goal(node_state: Node, goal_state: list):
+    if node_state==None or node_state.state==None:
+        return False
     return node_state.state == goal_state
 
 # Print puzzle
 
 
 def print_puzzle(state):
+    if state ==None:
+        print('None')
+        return
+    # if result is not None:
+
     for row in state:
         print(row)
 
 # Recursive Best-First Search
 
 
-def rbfs(state, goal_state, f_limit):
-    if is_goal(state, goal_state):
-        return state
+# def rbfs(state, goal_state, f_limit):
+#     if is_goal(state, goal_state):
+#         return state
 
     ### your implementation ###
     ###########################
 
 
 # Example input
+
+# *Best Result
 # initial_state = [[1, 2, 3], [4, 5, 6], [7, 0, 8]]
-initial_state = [[1, 2, 3], [8, 0, 4], [7, 6, 5]]
+
+initial_state = [[1, 2, 3], [0, 4, 6], [7, 5, 8]]
+
+# !WORST Result
+# initial_state = [[1, 2, 3], [8, 0, 4], [7, 6, 5]]
 goal_state = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
 
 mysolution = Solution(initial_state)
-mysolution.solve_puzzle(goal_state)
-print_puzzle(mysolution.state.state)
 
 
 # f_limit = heuristic(initial_state)
 # result = rbfs(initial_state, goal_state, f_limit)
 # print(initial_state)
-# print('------')
 
-# print("Initial state:")
-# print_puzzle(initial_state)
+print("Initial state:")
+print_puzzle(initial_state)
+print('------')
 
-# if result is not None:
-#     print("Goal state reached:")
+mysolution.rbfs(goal_state)
+
+
 #     print_puzzle(result)
-# else:
-#     print("Goal state could not be reached.")
+if is_goal(mysolution.state,goal_state):
+    print("Goal state reached:")
+    print_puzzle(mysolution.state.state)
+else:
+    print("Goal state could not be reached.")

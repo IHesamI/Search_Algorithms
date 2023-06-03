@@ -33,18 +33,7 @@ def Min_Max_Alpha(current_depth, index, is_max, values, alpha, beta, tree_depth)
 
 def print_pruned(positions, values):
     for i in positions:
-        print('Pruned value at {} : {}'.format(i, values[i]))
+        print('Pruned value at index {} : {}'.format(i, values[i]))
 
 
 position_of_all_checked_values = set()
-
-values = [3, 5, 6, 9, 1, 2, 0, -1]
-depth = int(math.log(len(values), 2))
-
-alpha = float('-inf')
-beta = float('+inf')
-
-print(Min_Max_Alpha(0, 0, True, values, alpha, beta, depth))
-pruned_nodes = list(filter(lambda x: not (
-    x in position_of_all_checked_values), [i for i in range(len(values))]))
-print_pruned(pruned_nodes, values)
